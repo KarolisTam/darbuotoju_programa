@@ -28,7 +28,6 @@ class DarbuotojaiGui:
         data = self.get_data()
         headers = ['ID', 'Vardas', 'Pavarde', 'Gimimo data', 'Pareigos', 'Atlyginimas', 'Nuo kada dirba']
         self.table = sg.Table(values=data, headings=headers, auto_size_columns=True, key="lentele", enable_events=True)
-        # Create layout for employee tab
         employee_tab_layout = [
             [sg.Text("Insert employee First name:"), sg.Input("", key="f_name", size=15)],
             [sg.Text("Insert employee Last name:"), sg.Input("", key="l_name", size=15)],
@@ -39,25 +38,23 @@ class DarbuotojaiGui:
              sg.Button("Edit Employee", key="edit"), sg.Button("Exit", key="Exit")],
             [self.table]
         ]
-        # Create layout for log tab
         log_tab_layout = [
-            [sg.Output(size=(80, 20))]  # Output element to display log messages
+            [sg.Listbox(size=(80, 20), key="log_output", font=("Courier New", 11), values=[])]
         ]
-        # Create the tab group
         self.tab_group = sg.TabGroup([[sg.Tab("Employees", employee_tab_layout), sg.Tab("Log", log_tab_layout)]],
                                      key="tab_group", enable_events=True)
         
         self.layout = [[self.tab_group]]
         self.window = sg.Window("Darbuotojai", layout=self.layout, finalize=True)
-        self.window["tab_group"].bind('<TabGroup>', '_tab_group_')
+        # self.window["tab_group"].bind('<TabGroup>', '_tab_group_')
 
     def refresh_log(self):
         try:
             with open("app.log", "r") as file:
-                log_content = file.read()
-            self.window["log_output"].update(log_content)
+                log_content = file.readlines()
+                self.window["log_output"].update(log_content)
         except Exception as e:
-            logging.error(f"Failed to refresh log: {str(e)}")
+                logging.error(f"Failed to refresh log: {str(e)}")
 
     def run(self):
         while True:
@@ -110,11 +107,13 @@ class DarbuotojaiGui:
                     session.commit()
                     self.table.update(values=self.get_data())
                     logging.info('User updated Employee')
-            elif event == "_tab_group_":
+
+            elif event == "tab_group":
                 active_tab = values["tab_group"]
+                logging.info('Tab changed')
                 if active_tab == "Log":
                     self.refresh_log()
-                    self.window.close()
+        self.window.close()
 
 darbuotojai = DarbuotojaiGui()
 darbuotojai.run() 
